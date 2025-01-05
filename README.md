@@ -1,34 +1,50 @@
-## User Action Flow:
-1. Create a dependencies.toml file in the root of each of their modules / services / libraries.
-2. Run the CLI command to generate the dependency graph (should be done in the CI/CD pipeline). This will
-generate a dependencies.json file with a graph of the dependencies between the nodes.
+# Dependency Cascade
 
-## Use Cases
+![Dependency Cascade](./image.webp)
 
-### Re-deploying a service when a library is updated
-When a library is updated, the service that depends on it should be re-built, re-tested, and re-deployed.
+**Dependency Cascade** automates and visualizes cross-module dependencies for your monorepo. It helps you:
+- Identify and respond to changes in upstream libraries or modules **within** your organization's monorepo.
+- Determine which end-to-end test suites need to run based on the modules they cover.
 
-To achieve this, one should create a `dependencies.toml` file in the root of the libraries with their name. Then,
-create another `dependencies.toml` file in the root of the services that use those libraries. When the libraries get
-updated, the CLI query will return a list of services that depended on the library and must go through the CI/CD pipeline.
+### What it is
+- Built in Rust
+- Lightweight and easy to use
+- No need to learn a new language or build-tool
+- Easy to integrate over time with new `dependencies.toml` files
+- Works well for distributed teams since they don't need to care about managing upstream dependencies, they can simply specify what
+their modules depend on and the tool will indicate when their services need to be re-tested or re-deployed.
 
-### Detecting which end-2-end tests to run
-End-2-end tests usually cover multiple services. To detect which of these to run, one should create a `dependencies.toml`
-in the root of the tests that cover these specific services with the dependencies pointing to these services. When ANY 
-of these services or their upstream dependencies are updated, the CLI query' returned list will include the end-2-end
-tests node.
+### What it isn't
+- A language-specific build-tool (like Bazel)
+- Slow (like Bazel)
 
-## Flow
+# Typical Use Cases
 
-1. `dependency-cascade prepare <root_dir>` -> JSON File
-    - Find all dependencies.toml files in the repository and parse them into `Node` objects.
-    - Throw warnings and errors if anything is anomalous (circular dependencies, dependdency doesn't exist, etc.)
-    - Store all the node objects in a JSON file for future analysis. JSON is outputed to the console.
-2. `dependency-cascade query <file_path> <file_path> ...`
-    - Given a list of file paths, find all the nodes that are affected by the changes in these files, returning a list of
-    node names that are affected.
+### 1. Re-deploying a service when an internal library is updated
+1. In each library, create a `dependencies.toml` specifying its name (e.g., `"library-foo"`).
+2. In each service, create a `dependencies.toml` listing the libraries it depends on (e.g., `"library-foo"`).
+3. Whenever you update `library-foo`, run `dependency-cascade query --files <changed-files>` to see which services depend on it. This lets you:
+   - Re-build;
+   - Re-test;
+   - Re-deploy
+   those impacted services automatically.
 
-# Using In-line
+### 2. Detecting which End-to-End Tests to Run
+1. In each end-to-end test suite root, create a `dependencies.toml` listing the services under test.
+2. If **any** of those services (or their dependencies) change, a `dependency-cascade query --files <changed-files>` will reveal which test suites must run.
+
+# Installation
+> **Assumption**: You have the prebuilt binary or have built from source. Adjust the steps below to match your environment. Go to the [releases page]() to download the pre-built binary.
+
+1. Install `dependency-cascade` in your PATH.
+2. Confirm it runs:
+
+```bash
+   dependency-cascade --help
 ```
-./dependency-cascade.exe query --graph-artifact "$(./dependency-cascade.exe prepare --dir test)" --files test/test_end2end/src/hey.txt
+
+3. You can run it in-line using the following command:
+
+```bash
+dependency-cascade query --graph-artifact "$(dependency-cascade prepare --dir test)" --files test/test_end2end/src/hey.txt test/test_lib/src/hey.txt
 ```
