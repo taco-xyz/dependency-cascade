@@ -15,8 +15,9 @@
 their modules depend on and the tool will indicate when their services need to be re-tested or re-deployed.
 
 ### What it isn't
-- A language-specific build-tool (like Bazel)
+- A build tool (like Bazel)
 - Slow (like Bazel)
+- It's not like Bazel, seriously.
 
 # Typical Use Cases
 
