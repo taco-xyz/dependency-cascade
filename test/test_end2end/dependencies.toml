@@ -1,0 +1,17 @@
+[module]
+name = "test_end2end"
+
+[dependencies]
+test_service = { name = "test_service" }
+
+[metadata]
+type = "e2e-test"
+language = "rust"
+build_mode = "docker"
+breakfast_i_ate_last_week = "eggs and bacon"
+
+[file_paths]
+include = [
+  "src/**/*",
+  "config/**/*"
+]
