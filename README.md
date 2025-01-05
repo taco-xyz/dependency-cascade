@@ -48,3 +48,10 @@ their modules depend on and the tool will indicate when their services need to b
 ```bash
 dependency-cascade query --graph-artifact "$(dependency-cascade prepare --dir test)" --files test/test_end2end/src/hey.txt test/test_lib/src/hey.txt
 ```
+
+# How it works
+1. You start by creating multiple `dependencies.toml` files in your monorepo. These files are used to specify which other modules each module depends on. A module can be a library, service, a test suite, or whatever you want!
+2. You run `dependency-cascade prepare --dir <root-dir>` to generate a JSON file that represents the dependency graph for your entire mono-repo. This command outputs a JSON artifact that you should store for the rest of your build process.
+3. Based on the `git diff` of the files that have changed, you can run `dependency-cascade query --graph-artifact <graph-artifact> --files <changed-files>` to see which modules are impacted by the changes.
+4. Based on the output of the query, you can decide what to do next. For example, you can re-build, re-test, or re-deploy the impacted modules.
+5. **BONUS:** You can encode extra information about your modules in the `metadata` field of the `dependencies.toml` file. This information is returned along with the query results and you can then use that to decide what to do (just a test suite to run? A full service to re-deploy? What's the order in which I should run tests?)
