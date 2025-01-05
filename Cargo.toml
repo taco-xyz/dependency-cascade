@@ -4,4 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-petgraph = "0.7.0"
+clap = { version = "4.5.23", features = ["derive"] }
+env_logger = "0.11.6"
+glob = "0.3.2"
+log = "0.4.22"
+petgraph = { version = "0.7.0", features = ["serde-1"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.134"
+thiserror = "2.0.9"
+toml = { version = "0.8.19", features = ["preserve_order"] }
+walkdir = "2.5.0"
