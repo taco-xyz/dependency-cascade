@@ -112,6 +112,7 @@ impl DependencyGraph {
     
     /// Returns the list of nodes that are direct or indirect dependencies of the given node
     /// (i.e. upstream of `node_name`), using a reverse graph traversal.
+    #[allow(dead_code)]
     pub fn get_dependencies(&self, node_name: &str) -> Vec<Node> {
         let mut results = Vec::new();
         let mut visited = HashSet::new();
