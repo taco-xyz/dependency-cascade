@@ -47,7 +47,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          
+          visibility: public
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
