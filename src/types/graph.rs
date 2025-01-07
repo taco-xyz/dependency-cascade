@@ -38,7 +38,7 @@ impl DependencyGraph {
     ///   - Logs an error if duplicate node names are found.
     ///   - Logs a warning if a dependency does not exist in the graph.
     ///   - Logs an error if a circular dependency is detected.
-    pub fn new(nodes: Vec<Node>) -> Result<Self, DependencyGraphCreationError> {
+    pub fn new(nodes: Vec<Node>, allow_cyclical: bool) -> Result<Self, DependencyGraphCreationError> {
         let mut graph = Graph::<Node, (), Directed>::new();
         let mut name_to_index = HashMap::new();
         let mut seen_names = HashSet::new();
@@ -79,12 +79,13 @@ impl DependencyGraph {
         }
 
         // Check for cycles by trying a toposort.
-        if let Err(cycle_err) = toposort(&graph, None) {
-            // Find the cycle path by doing a DFS from the problematic node
-            // this is important to help the user understand the cycle.
-            let mut cycle_path = vec![cycle_err.node_id()];
-            let mut current = cycle_err.node_id();
-            let mut visited = HashSet::new();
+        if !allow_cyclical {
+            if let Err(cycle_err) = toposort(&graph, None) {
+                // Find the cycle path by doing a DFS from the problematic node
+                // this is important to help the user understand the cycle.
+                let mut cycle_path = vec![cycle_err.node_id()];
+                let mut current = cycle_err.node_id();
+                let mut visited = HashSet::new();
             visited.insert(current);
 
             'outer: while let Some(neighbors) = graph.neighbors_directed(current, Direction::Outgoing).collect::<Vec<_>>().into_iter().next() {
@@ -103,8 +104,9 @@ impl DependencyGraph {
 
             return Err(DependencyGraphCreationError::CircularDependency(
                 cycle_names.join(" -> "),
-                cycle_names[0].to_string() // Complete the cycle
-            ));
+                    cycle_names[0].to_string() // Complete the cycle
+                ));
+            }
         }
 
         Ok(Self { graph, name_to_index })
@@ -219,7 +221,7 @@ mod tests {
             create_test_node("c", vec!["b"]),
         ];
 
-        let graph = DependencyGraph::new(nodes).unwrap();
+        let graph = DependencyGraph::new(nodes, false).unwrap();
         
         assert!(graph.get_node("a").is_some());
         assert!(graph.get_node("b").is_some());
@@ -234,7 +236,7 @@ mod tests {
             create_test_node("a", vec![]),
         ];
 
-        let err = DependencyGraph::new(nodes).unwrap_err();
+        let err = DependencyGraph::new(nodes, false).unwrap_err();
         assert!(matches!(err, DependencyGraphCreationError::DuplicateNodeName(name) if name == "a"));
     }
 
@@ -244,7 +246,7 @@ mod tests {
             create_test_node("a", vec!["missing"]),
         ];
 
-        let err = DependencyGraph::new(nodes).unwrap_err();
+        let err = DependencyGraph::new(nodes, false).unwrap_err();
         assert!(matches!(err, 
             DependencyGraphCreationError::MissingDependency(dep, node, _) 
             if dep == "missing" && node == "a"
@@ -259,8 +261,20 @@ mod tests {
             create_test_node("c", vec!["a"]),
         ];
 
-        let err = DependencyGraph::new(nodes).unwrap_err();
+        let err = DependencyGraph::new(nodes, false).unwrap_err();
         assert!(matches!(err, DependencyGraphCreationError::CircularDependency(_, _)));
+    }
+
+    #[test]
+    fn test_cyclical_dependency_allowed() {
+        let nodes = vec![
+            create_test_node("a", vec!["b"]),
+            create_test_node("b", vec!["c"]),
+            create_test_node("c", vec!["a"]),
+        ];
+
+        let graph = DependencyGraph::new(nodes, true).unwrap();
+        assert!(graph.get_node("a").is_some());
     }
 
     #[test]
@@ -272,7 +286,7 @@ mod tests {
             create_test_node("d", vec![]),
         ];
 
-        let graph = DependencyGraph::new(nodes).unwrap();
+        let graph = DependencyGraph::new(nodes, false).unwrap();
         
         let c_deps: HashSet<_> = graph.get_dependencies("c")
             .into_iter()
@@ -298,7 +312,7 @@ mod tests {
             create_test_node("d", vec!["a"]),
         ];
 
-        let graph = DependencyGraph::new(nodes).unwrap();
+        let graph = DependencyGraph::new(nodes, false).unwrap();
         
         let a_dependents: HashSet<_> = graph.get_dependents("a")
             .into_iter()
@@ -325,7 +339,7 @@ mod tests {
             create_test_node("e", vec!["a", "d"]),
         ];
 
-        let graph = DependencyGraph::new(nodes).unwrap();
+        let graph = DependencyGraph::new(nodes, false).unwrap();
         
         let e_deps: HashSet<_> = graph.get_dependencies("e")
             .into_iter()
@@ -347,7 +361,7 @@ mod tests {
             create_test_node("b", vec!["a"]),
         ];
 
-        let graph = DependencyGraph::new(nodes).unwrap();
+        let graph = DependencyGraph::new(nodes, false).unwrap();
         let all_nodes = graph.get_all_nodes();
         assert_eq!(all_nodes.len(), 2);
     }
@@ -360,7 +374,7 @@ mod tests {
             create_test_node("c", vec!["b"]),
         ];
 
-        let graph = DependencyGraph::new(nodes).unwrap();
+        let graph = DependencyGraph::new(nodes, false).unwrap();
         
         // Test single file change
         let affected = graph.get_affected_nodes(&vec![PathBuf::from("test/a/src/file.rs")]);

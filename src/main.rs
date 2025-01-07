@@ -65,10 +65,10 @@ fn main() {
     env_logger::builder().init();
 
     match cli.command {
-        Some(Commands::Prepare { dir, dependency_toml_name }) => {
+        Some(Commands::Prepare { dir, dependency_toml_name, allow_cyclical }) => {
             
             // Prepare the graph object
-            let graph = commands::prepare(dir, dependency_toml_name);
+            let graph = commands::prepare(dir, dependency_toml_name, allow_cyclical);
             
             // Serialize the graph object to JSON
             match graph {
