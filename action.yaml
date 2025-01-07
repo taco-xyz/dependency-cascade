@@ -1,0 +1,58 @@
+name: 'Dependency Cascade: Query Affected Nodes'
+description: 'Determines which services, libraries, and tests are affected by changes based on their dependency graph. Read more about it in the [CLI repository](https://github.com/tubarao312/dependency-cascade).'
+
+branding:
+  icon: 'layers'
+  color: 'orange'
+
+inputs:
+  base-ref:
+    description: 'Base reference for comparison (for PRs)'
+    required: false
+  head-ref:
+    description: 'Head reference for comparison'
+    required: true
+  before-sha:
+    description: 'Previous SHA for push events'
+    required: false
+
+outputs:
+  affected-services:
+    description: 'JSON array of touched nodes.'
+    value: ${{ steps.query.outputs.affected }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Pull dependency-cascade image
+      shell: bash
+      run: docker pull ghcr.io/tubarao312/dependency-cascade:main
+
+    - name: Get changed files
+      id: changed-files
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.base-ref }}" ]; then
+          files=$(git diff --name-only origin/${{ inputs.base-ref }} ${{ inputs.head-ref }})
+        else
+          files=$(git diff --name-only ${{ inputs.before-sha }} ${{ inputs.head-ref }})
+        fi
+        args=""
+        for file in $files; do
+          args="$args -f $file"
+        done
+        echo "files=$args" >> $GITHUB_OUTPUT
+
+    - name: Prepare dependency graph artifact
+      id: prepare
+      shell: bash
+      run: |
+        docker run --rm -v $(pwd):/workspace -w /workspace ghcr.io/tubarao312/dependency-cascade:main prepare -d . > dependency-graph.json
+        cat dependency-graph.json
+
+    - name: Query affected nodes using dependency graph
+      id: query
+      shell: bash
+      run: |
+        affected=$(docker run --rm -v $(pwd):/workspace -w /workspace ghcr.io/tubarao312/dependency-cascade:main query -g dependency-graph.json ${{ steps.changed-files.outputs.files }})
+        echo "affected=$affected" >> $GITHUB_OUTPUT
