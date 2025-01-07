@@ -1,7 +1,6 @@
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use glob::Pattern;
 
 /// Represents a node in the dependency graph.
 #[derive(Debug, Clone, Serialize, Deserialize)]
