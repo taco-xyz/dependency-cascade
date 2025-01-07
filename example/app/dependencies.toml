@@ -1,0 +1,18 @@
+[module]
+name = "example_app"
+
+[dependencies]
+example_lib = { name = "example_lib" } # Our imaginary app uses the example_lib
+
+[metadata]
+type = "app"
+language = "rust"
+you_can_do_anything_here = "literally anything"
+
+[file_paths]
+include = [
+  "src/**/*"
+]
+exclude = [
+  "README.md"
+]

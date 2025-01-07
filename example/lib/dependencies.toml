@@ -1,0 +1,17 @@
+[module]
+name = "example_lib"
+
+# Our imaginary library doesn't depent on anything - that's fine.
+
+[metadata]
+type = "lib"
+language = "rust"
+you_can_do_anything_here = "literally anything"
+
+[file_paths]
+include = [
+  "src/**/*"
+]
+exclude = [
+  "README.md"
+]

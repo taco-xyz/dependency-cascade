@@ -1,0 +1,23 @@
+[module]
+name = "example_test"
+
+# Our imaginary test depends on the example_app because that's the only thing we're testing.
+# In the real world, we'd try to check which services the test is meant to touch and make
+# those the dependencies, so that this dependency would show up whenever on of those gets
+# touched.
+
+[dependencies]
+example_app = { name = "example_app" }
+
+[metadata]
+type = "test"
+language = "rust"
+you_can_do_anything_here = "literally anything"
+
+[file_paths]
+include = [
+  "src/**/*"
+]
+exclude = [
+  "README.md"
+]
