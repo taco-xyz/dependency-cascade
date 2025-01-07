@@ -1,5 +1,5 @@
 name: 'Dependency Cascade: Query Affected Nodes'
-description: 'Determines which services, libraries, and tests are affected by changes based on their dependency graph. Read more about it in the [CLI repository](https://github.com/tubarao312/dependency-cascade).'
+description: 'Determines which services, libraries, and tests are affected by changes based on their dependency graph.'
 
 branding:
   icon: 'layers'
