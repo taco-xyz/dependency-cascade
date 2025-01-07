@@ -18,11 +18,21 @@ use crate::types::{DependencyGraph, Node};
 pub fn prepare(dir: PathBuf, dependency_toml_name: Option<String>, allow_cyclical: bool) -> Result<DependencyGraph, Box<dyn std::error::Error>> {
     // Recursively walk directory and collect all dependency.toml files as nodes of the graph
     let mut nodes: Vec<Node> = Vec::new();
-    for entry in WalkDir::new(dir) {
+    for entry in WalkDir::new(&dir) {
         let entry = entry?;
         if entry.file_name().to_string_lossy() == dependency_toml_name.as_deref().unwrap_or("dependencies.toml") {
+            let path = entry.path().parent().unwrap().to_path_buf();
             let content = fs::read_to_string(entry.path())?;
-            let node = Node::from_toml_str(&content, entry.path().parent().unwrap().to_path_buf())?;
+            
+            // Fix the path to be relative to the root directory
+            // NOTE - Surely there is a better way to do this. IDK it's 5:10am
+            let path = &path.strip_prefix("./").unwrap_or(&path);
+            let path = &path.strip_prefix("/").unwrap_or(&path);
+            let path = &path.strip_prefix(".\\").unwrap_or(&path);
+            let path = &path.strip_prefix("\\").unwrap_or(&path);
+
+            // Create the node
+            let node = Node::from_toml_str(&content, path.to_path_buf())?;
             nodes.push(node);
         }
     }
