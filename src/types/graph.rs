@@ -181,6 +181,7 @@ impl DependencyGraph {
         for node in nodes.iter() {
             // Check each path individually
             for path in changed_files {
+                // println!("checking changed file path: {}", path.to_str().unwrap());
                 if node.includes_path(path) {
                     let dependents = self.get_dependents(&node.name);
                     affected_nodes.insert(node.name.clone());

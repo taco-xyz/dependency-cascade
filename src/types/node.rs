@@ -124,11 +124,13 @@ impl Node {
         let matches_include = self.included_paths.iter()
             .any(|pattern| {
                 let full_pattern = self.path.join(pattern);
+                // println!("full_pattern: {}", full_pattern.to_str().unwrap());
                 glob::Pattern::new(full_pattern.to_str().unwrap())
                     .map(|p| p.matches_path(path))
                     .unwrap_or(false)
             });
         
+        // println!("matches_include: {}", matches_include);
 
         // Then check it's not explicitly excluded
         let matches_exclude = self.excluded_paths.iter()
