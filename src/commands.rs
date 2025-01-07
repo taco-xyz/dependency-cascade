@@ -15,7 +15,7 @@ use crate::types::{DependencyGraph, Node};
 /// 
 /// ### Returns
 /// * `DependencyGraph` - The dependency graph artifact
-pub fn prepare(dir: PathBuf, dependency_toml_name: Option<String>) -> Result<DependencyGraph, Box<dyn std::error::Error>> {
+pub fn prepare(dir: PathBuf, dependency_toml_name: Option<String>, allow_cyclical: bool) -> Result<DependencyGraph, Box<dyn std::error::Error>> {
     // Recursively walk directory and collect all dependency.toml files as nodes of the graph
     let mut nodes: Vec<Node> = Vec::new();
     for entry in WalkDir::new(dir) {
@@ -28,7 +28,7 @@ pub fn prepare(dir: PathBuf, dependency_toml_name: Option<String>) -> Result<Dep
     }
 
     // Create dependency graph from nodes
-    let graph = DependencyGraph::new(nodes)?;
+    let graph = DependencyGraph::new(nodes, allow_cyclical)?;
 
     Ok(graph)
 }
@@ -63,6 +63,9 @@ pub enum Commands {
         /// Defaults to `dependencies.toml`.
         #[arg(long, value_name = "NAME")]
         dependency_toml_name: Option<String>,
+        /// Whether to allow the node dependency graph to be cyclical. Defaults to `false`.
+        #[arg(long, value_name = "ALLOW_CYCLICAL")]
+        allow_cyclical: bool,
     },
     /// Queries the dependency graph artifact for all the dependency nodes touched by 
     /// the given file changes. HINT: Combo it with `git diff --name-only` to know which 
