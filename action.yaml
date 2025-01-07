@@ -1,5 +1,9 @@
-name: 'Query Affected Services'
-description: 'Determines which services are affected by changes based on dependency graph'
+name: 'Dependency Cascade: Query Affected Nodes'
+description: 'Determines which services, libraries, and tests are affected by changes based on their dependency graph. Read more about it in the [CLI repository](https://github.com/tubarao312/dependency-cascade).'
+
+branding:
+  icon: 'layers'
+  color: 'orange'
 
 inputs:
   base-ref:
@@ -14,7 +18,7 @@ inputs:
 
 outputs:
   affected-services:
-    description: 'JSON array of affected service paths'
+    description: 'JSON array of touched nodes.'
     value: ${{ steps.query.outputs.affected }}
 
 runs:
@@ -39,14 +43,14 @@ runs:
         done
         echo "files=$args" >> $GITHUB_OUTPUT
 
-    - name: Prepare dependency graph
+    - name: Prepare dependency graph artifact
       id: prepare
       shell: bash
       run: |
         docker run --rm -v $(pwd):/workspace -w /workspace ghcr.io/tubarao312/dependency-cascade:main prepare -d . > dependency-graph.json
         cat dependency-graph.json
 
-    - name: Query affected nodes
+    - name: Query affected nodes using dependency graph
       id: query
       shell: bash
       run: |
